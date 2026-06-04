@@ -27,6 +27,10 @@ rank customers by a **lead score** and focus on the most promising segments.
    coefficient direction), high-priority segment profile, education mix.
 8. **Campaign recommendations** — plain-language marketing guidance.
 9. **Export** — download ranked leads as **CSV** or **Excel**.
+10. **Bilingual UI** — switch between **Tiếng Việt** (default) and **English**
+    via the language selector at the top of the sidebar. Page content,
+    metrics, charts, lead priorities, recommended actions and exported column
+    headers are all translated.
 
 ## 🎨 Design
 
@@ -79,7 +83,8 @@ src/
   modeling.py                # train models + importances
   metrics.py                 # metrics incl. precision@k / lift@k / PR-AUC
   scoring.py                 # lead table, segments, recommendations
-  ui.py                      # shared theming helpers
+  i18n.py                    # English/Vietnamese translation tables
+  ui.py                      # shared theming + language helpers
 sample_data/
   generate_sample.py         # synthetic dataset generator
 ```

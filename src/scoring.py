@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from . import config
+from . import config, i18n
 
 
 def build_lead_table(data: dict, scores: np.ndarray) -> pd.DataFrame:
@@ -82,34 +82,37 @@ def segment_summary(lead_df: pd.DataFrame) -> dict:
     return summary
 
 
-def campaign_recommendations(lead_df: pd.DataFrame, summary: dict) -> list[str]:
-    """Generate plain-language marketing recommendations."""
+def campaign_recommendations(lead_df: pd.DataFrame, summary: dict,
+                             lang: str = i18n.DEFAULT_LANG) -> list[str]:
+    """Generate plain-language marketing recommendations (localized)."""
     dist = priority_distribution(lead_df)
-    recs = [
-        f"Focus first on the **{dist['High']} high-priority leads** "
-        f"(score ≥ {config.HIGH_THRESHOLD:.2f}) - these convert best.",
-    ]
+    recs = [i18n.t("rec.focus_high", lang, n=int(dist["High"]),
+                   thr=config.HIGH_THRESHOLD)]
     if not np.isnan(summary.get("avg_income_high", float("nan"))):
-        recs.append(
-            "Use personalized loan offers for high-income, high-card-spend "
-            f"customers (avg income of top leads ≈ "
-            f"${summary['avg_income_high']:.0f}k)."
-        )
-    recs.append(
-        f"Nurture the **{dist['Medium']} medium-priority leads** with "
-        "follow-up emails before committing sales effort."
-    )
-    recs.append(
-        f"Avoid mass marketing to the **{dist['Low']} low-priority leads** - "
-        "outreach cost rarely pays off here."
-    )
-    recs.append(
-        "Export the top leads to your CRM and track conversion outcomes."
-    )
-    recs.append(
-        "Retrain the model periodically as new campaign results arrive."
-    )
+        recs.append(i18n.t("rec.personalize", lang,
+                           income=summary["avg_income_high"]))
+    recs.append(i18n.t("rec.nurture", lang, n=int(dist["Medium"])))
+    recs.append(i18n.t("rec.avoid_low", lang, n=int(dist["Low"])))
+    recs.append(i18n.t("rec.export_crm", lang))
+    recs.append(i18n.t("rec.retrain", lang))
     return recs
+
+
+def localize_lead_df(df: pd.DataFrame, lang: str = i18n.DEFAULT_LANG) -> pd.DataFrame:
+    """Return a display copy with localized Priority/Action values & headers.
+
+    Internal storage keeps English canonical values; this is purely cosmetic.
+    """
+    out = df.copy()
+    if "Priority" in out.columns:
+        # Derive the localized action from the (English) priority band first.
+        if "Recommended Action" in out.columns:
+            out["Recommended Action"] = out["Priority"].map(
+                lambda b: i18n.action_label(b, lang))
+        out["Priority"] = out["Priority"].map(
+            lambda b: i18n.priority_label(b, lang))
+    out = out.rename(columns={c: i18n.header_label(c, lang) for c in out.columns})
+    return out
 
 
 # Columns to keep when exporting a clean lead list for CRM use.

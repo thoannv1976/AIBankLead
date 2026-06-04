@@ -9,52 +9,29 @@ from src import config, ui
 
 ui.setup_page("Dashboard", icon="🏦")
 
-ui.hero(
-    "BankLead AI",
-    "AI-driven customer analytics to identify high-potential personal-loan "
-    "leads from banking profile data.",
-)
+ui.hero("BankLead AI", ui.T("dash.subtitle"))
 
 # ---------------------------------------------------------------------------
 # Intro + research objective
 # ---------------------------------------------------------------------------
 left, right = st.columns([2, 1])
 with left:
-    st.subheader("About this app")
-    st.write(
-        "BankLead AI helps retail-banking marketing teams move from mass "
-        "marketing to **data-driven targeting**. Instead of offering personal "
-        "loans to everyone, the bank can rank customers by an AI **lead score** "
-        "and focus on the most promising segments."
-    )
-    st.info(
-        "**Research objective** — *AI-based customer analytics for potential "
-        "customer identification in banking using customer profile data.*"
-    )
-    st.markdown(
-        "**Workflow**\n"
-        "1. Upload customer CSV → 2. Auto preprocess → 3. Train models "
-        "(Logistic Regression, Random Forest, XGBoost) → 4. Evaluate → "
-        "5. Score & rank leads → 6. Export for CRM."
-    )
+    st.subheader(ui.T("dash.about_title"))
+    st.write(ui.T("dash.about_body"))
+    st.info(ui.T("dash.research_objective"))
+    st.markdown(ui.T("dash.workflow"))
 
 with right:
-    st.subheader("Pages")
-    st.markdown(
-        "- 📤 **Upload & Preview**\n"
-        "- 🤖 **Train & Evaluate**\n"
-        "- 🎯 **Lead Scoring**\n"
-        "- 📊 **Customer Insights**\n"
-        "- 📥 **Export Results**"
-    )
-    st.caption("Use the sidebar to navigate between pages.")
+    st.subheader(ui.T("dash.pages_title"))
+    st.markdown(ui.T("dash.pages_list"))
+    st.caption(ui.T("dash.nav_caption"))
 
 st.divider()
 
 # ---------------------------------------------------------------------------
 # Status KPIs
 # ---------------------------------------------------------------------------
-st.subheader("Current session status")
+st.subheader(ui.T("dash.status_title"))
 
 raw_df = st.session_state.get("raw_df")
 overview = st.session_state.get("overview")
@@ -63,39 +40,29 @@ best = st.session_state.get("best_model")
 
 c1, c2, c3, c4 = st.columns(4)
 
-if raw_df is not None:
-    c1.metric("Customers uploaded", f"{len(raw_df):,}")
-else:
-    c1.metric("Customers uploaded", "—")
+c1.metric(ui.T("metric.customers_uploaded"),
+          f"{len(raw_df):,}" if raw_df is not None else "—")
 
 if overview and overview.get("has_target"):
-    c2.metric("Personal-loan acceptance", f"{overview['acceptance_rate']:.1%}")
+    c2.metric(ui.T("metric.acceptance"), f"{overview['acceptance_rate']:.1%}")
 else:
-    c2.metric("Personal-loan acceptance", "—")
+    c2.metric(ui.T("metric.acceptance"), "—")
 
-if models:
-    c3.metric("Models trained", f"{len(models)}")
-else:
-    c3.metric("Models trained", "0")
-
-c4.metric("Best model", best if best else "Not trained")
+c3.metric(ui.T("metric.models_trained"), f"{len(models)}" if models else "0")
+c4.metric(ui.T("metric.best_model"), best if best else ui.T("val.not_trained"))
 
 st.divider()
 
 # Status guidance
 if raw_df is None:
-    st.warning("👉 Start by going to **Upload & Preview** to load a customer CSV "
-               "(or click *Load sample dataset* there).")
+    st.warning(ui.T("dash.status_need_upload"))
 elif not models:
-    st.info("✅ Data loaded. Next, open **Train & Evaluate** to train the models.")
-elif not st.session_state.get("lead_df") is not None:
-    st.info("✅ Models trained. Open **Lead Scoring** to rank your customers.")
+    st.info(ui.T("dash.status_need_train"))
+elif st.session_state.get("lead_df") is None:
+    st.info(ui.T("dash.status_need_score"))
 else:
-    st.success("✅ Pipeline complete. Visit **Lead Scoring**, **Customer "
-               "Insights**, and **Export Results**.")
+    st.success(ui.T("dash.status_complete"))
 
-st.caption(
-    f"Priority bands — High: score ≥ {config.HIGH_THRESHOLD:.2f} · "
-    f"Medium: {config.MEDIUM_THRESHOLD:.2f}–{config.HIGH_THRESHOLD-0.01:.2f} · "
-    f"Low: < {config.MEDIUM_THRESHOLD:.2f}"
-)
+st.caption(ui.T("dash.priority_caption", high=config.HIGH_THRESHOLD,
+                med=config.MEDIUM_THRESHOLD,
+                high_minus=config.HIGH_THRESHOLD - 0.01))
